@@ -5336,11 +5336,11 @@ nautilus_file_get_thumbnail_icon (NautilusFile          *file,
             {
                 if (nautilus_is_video_file (file))
                 {
-                    nautilus_ui_frame_video (&pixbuf);
+                    /*nautilus_ui_frame_video (&pixbuf); */
                 }
                 else
                 {
-                    nautilus_ui_frame_image (&pixbuf);
+                    /*nautilus_ui_frame_image (&pixbuf); */
                 }
             }
 

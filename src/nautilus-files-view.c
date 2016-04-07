@@ -35,6 +35,7 @@
 #include "nautilus-error-reporting.h"
 #include "nautilus-file-undo-manager.h"
 #include "nautilus-floating-bar.h"
+#include "nautilus-icon-view.h"
 #include "nautilus-list-view.h"
 #include "nautilus-canvas-view.h"
 #include "nautilus-mime-actions.h"
@@ -130,10 +131,10 @@
 
 #define MIN_COMMON_FILENAME_PREFIX_LENGTH 4
 
-
 enum
 {
     ADD_FILE,
+    ADD_FILES,
     BEGIN_FILE_CHANGES,
     BEGIN_LOADING,
     CLEAR,
@@ -3871,6 +3872,7 @@ process_old_files (NautilusFilesView *view)
     GList *files_added, *files_changed, *node;
     FileAndDirectory *pending;
     GList *selection, *files;
+    g_autoptr (GList) pending_additions = NULL;
 
     files_added = view->details->old_added_files;
     files_changed = view->details->old_changed_files;
@@ -3885,8 +3887,7 @@ process_old_files (NautilusFilesView *view)
         for (node = files_added; node != NULL; node = node->next)
         {
             pending = node->data;
-            g_signal_emit (view,
-                           signals[ADD_FILE], 0, pending->file, pending->directory);
+            pending_additions = g_list_prepend (pending_additions, pending->file);
             /* Acknowledge the files that were pending to be revealed */
             if (g_hash_table_contains (view->details->pending_reveal, pending->file))
             {
@@ -3894,6 +3895,12 @@ process_old_files (NautilusFilesView *view)
                                      pending->file,
                                      GUINT_TO_POINTER (TRUE));
             }
+        }
+
+        if (files_added != NULL)
+        {
+            g_signal_emit (view,
+                           signals[ADD_FILES], 0, pending_additions, pending->directory);
         }
 
         for (node = files_changed; node != NULL; node = node->next)
@@ -8916,6 +8923,14 @@ nautilus_files_view_class_init (NautilusFilesViewClass *klass)
                       NULL, NULL,
                       g_cclosure_marshal_generic,
                       G_TYPE_NONE, 2, NAUTILUS_TYPE_FILE, NAUTILUS_TYPE_DIRECTORY);
+    signals[ADD_FILES] =
+        g_signal_new ("add-files",
+                      G_TYPE_FROM_CLASS (klass),
+                      G_SIGNAL_RUN_LAST,
+                      G_STRUCT_OFFSET (NautilusFilesViewClass, add_files),
+                      NULL, NULL,
+                      g_cclosure_marshal_generic,
+                      G_TYPE_NONE, 2, G_TYPE_POINTER, NAUTILUS_TYPE_DIRECTORY);
     signals[BEGIN_FILE_CHANGES] =
         g_signal_new ("begin-file-changes",
                       G_TYPE_FROM_CLASS (klass),
@@ -9269,7 +9284,7 @@ nautilus_files_view_new (guint               id,
     {
         case NAUTILUS_VIEW_GRID_ID:
         {
-            view = nautilus_canvas_view_new (slot);
+            view = nautilus_icon_view_new (slot);
         }
         break;
 
