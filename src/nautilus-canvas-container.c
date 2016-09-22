@@ -2717,8 +2717,10 @@ get_rubber_color (NautilusCanvasContainer *container,
         gtk_style_context_save (context);
         gtk_style_context_add_class (context, GTK_STYLE_CLASS_RUBBERBAND);
 
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
         gtk_style_context_get_background_color (context, GTK_STATE_FLAG_NORMAL, bgcolor);
         gtk_style_context_get_border_color (context, GTK_STATE_FLAG_NORMAL, bordercolor);
+G_GNUC_END_IGNORE_DEPRECATIONS
 
         gtk_style_context_restore (context);
     }

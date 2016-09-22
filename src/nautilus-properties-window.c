@@ -2882,11 +2882,13 @@ paint_slice (GtkWidget   *widget,
     state = gtk_style_context_get_state (context);
     gtk_style_context_get_border (context, state, &border);
 
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
     gtk_style_context_save (context);
     gtk_style_context_add_class (context, style_class);
     gtk_style_context_get_background_color (context, state, &fill);
     gtk_style_context_get_border_color (context, state, &stroke);
     gtk_style_context_restore (context);
+G_GNUC_END_IGNORE_DEPRECATIONS
 
     width = gtk_widget_get_allocated_width (widget);
     height = gtk_widget_get_allocated_height (widget);

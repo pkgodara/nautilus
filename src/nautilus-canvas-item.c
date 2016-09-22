@@ -1299,6 +1299,7 @@ real_map_surface (NautilusCanvasItem *canvas_item)
     {
         style = gtk_widget_get_style_context (GTK_WIDGET (canvas));
 
+G_GNUC_BEGIN_IGNORE_DEPRECATIONS
         if (gtk_widget_has_focus (GTK_WIDGET (canvas)))
         {
             gtk_style_context_get_background_color (style, GTK_STATE_FLAG_SELECTED, &color);
@@ -1307,6 +1308,7 @@ real_map_surface (NautilusCanvasItem *canvas_item)
         {
             gtk_style_context_get_background_color (style, GTK_STATE_FLAG_ACTIVE, &color);
         }
+G_GNUC_END_IGNORE_DEPRECATIONS
 
         old_pixbuf = temp_pixbuf;
         temp_pixbuf = eel_create_colorized_pixbuf (temp_pixbuf, &color);
