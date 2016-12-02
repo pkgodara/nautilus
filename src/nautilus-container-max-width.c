@@ -19,7 +19,7 @@ static GParamSpec *properties [N_PROPS];
 
 void
 nautilus_container_max_width_set_max_width (NautilusContainerMaxWidth *self,
-                                       guint                 max_width)
+                                            guint                      max_width)
 {
     self->max_width = max_width;
     gtk_widget_queue_allocate (GTK_WIDGET (self));
@@ -47,9 +47,9 @@ nautilus_container_max_width_finalize (GObject *object)
 
 static void
 nautilus_container_max_width_get_property (GObject    *object,
-                                      guint       prop_id,
-                                      GValue     *value,
-                                      GParamSpec *pspec)
+                                           guint       prop_id,
+                                           GValue     *value,
+                                           GParamSpec *pspec)
 {
     NautilusContainerMaxWidth *self = NAUTILUS_CONTAINER_MAX_WIDTH (object);
 
@@ -70,9 +70,9 @@ nautilus_container_max_width_get_property (GObject    *object,
 
 static void
 nautilus_container_max_width_set_property (GObject      *object,
-                                      guint         prop_id,
-                                      const GValue *value,
-                                      GParamSpec   *pspec)
+                                           guint         prop_id,
+                                           const GValue *value,
+                                           GParamSpec   *pspec)
 {
     NautilusContainerMaxWidth *self = NAUTILUS_CONTAINER_MAX_WIDTH (object);
 

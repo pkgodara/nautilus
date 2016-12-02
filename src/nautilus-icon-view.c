@@ -503,8 +503,8 @@ create_widget_func (gpointer item,
     gtk_widget_set_halign (container, GTK_ALIGN_CENTER);
 
     gtk_container_add (item_container, container);
-    nautilus_icon_view_item_set_max_width (NAUTILUS_ICON_VIEW_ITEM (item_container),
-                                           get_icon_size_for_zoom_level (priv->zoom_level));
+    nautilus_container_max_width_set_max_width (NAUTILUS_CONTAINER_MAX_WIDTH (item_container),
+                                                get_icon_size_for_zoom_level (priv->zoom_level));
 
     child = gtk_flow_box_child_new ();
     gtk_container_add (child, item_container);
