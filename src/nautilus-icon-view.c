@@ -24,11 +24,9 @@
 #include "nautilus-directory.h"
 #include "nautilus-global-preferences.h"
 
-#include "nautilus-icon-view-item.h"
+#include "nautilus-container-max-width.h"
 
 #include <glib.h>
-
-static int n_files = 0;
 
 typedef struct
 {
@@ -63,7 +61,6 @@ real_clear (NautilusFilesView *self)
     NautilusIconViewPrivate *priv = nautilus_icon_view_get_instance_private (self);
 
     g_list_store_remove_all (G_LIST_STORE (priv->model));
-    n_files = 0;
 }
 
 
@@ -263,8 +260,8 @@ replace_icon (NautilusIconView *self,
     label = g_object_get_data (flow_box_item, "label");
 
     icon_item = gtk_bin_get_child (GTK_BIN (flow_box_item));
-    nautilus_icon_view_item_set_max_width (NAUTILUS_ICON_VIEW_ITEM (icon_item),
-                                           get_icon_size_for_zoom_level (priv->zoom_level));
+    nautilus_container_max_width_set_max_width (NAUTILUS_CONTAINER_MAX_WIDTH (icon_item),
+                                                get_icon_size_for_zoom_level (priv->zoom_level));
     box = gtk_bin_get_child (GTK_BIN (icon_item));
     gtk_container_remove (GTK_CONTAINER (box), old_icon);
     new_icon = create_icon (self, file);
@@ -476,7 +473,7 @@ create_widget_func (gpointer item,
     NautilusIconViewPrivate *priv = nautilus_icon_view_get_instance_private (self);
     GtkFlowBoxChild *child;
     GtkBox *container;
-    NautilusIconViewItem *icon_item;
+    NautilusContainerMaxWidth *item_container;
     gint label_nat_size;
     gint icon_nat_size;
     GtkLabel *label;
@@ -484,7 +481,7 @@ create_widget_func (gpointer item,
     GtkStyleContext *style_context;
 
     container = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-    icon_item = nautilus_icon_view_item_new ();
+    item_container = nautilus_container_max_width_new ();
 
     icon = create_icon (self, file);
     gtk_box_pack_start (container, icon, FALSE, FALSE, 0);
@@ -505,12 +502,12 @@ create_widget_func (gpointer item,
     gtk_widget_set_valign (container, GTK_ALIGN_START);
     gtk_widget_set_halign (container, GTK_ALIGN_CENTER);
 
-    gtk_container_add (icon_item, container);
-    nautilus_icon_view_item_set_max_width (NAUTILUS_ICON_VIEW_ITEM (icon_item),
+    gtk_container_add (item_container, container);
+    nautilus_icon_view_item_set_max_width (NAUTILUS_ICON_VIEW_ITEM (item_container),
                                            get_icon_size_for_zoom_level (priv->zoom_level));
 
     child = gtk_flow_box_child_new ();
-    gtk_container_add (child, icon_item);
+    gtk_container_add (child, item_container);
 
     g_object_set_data (child, "file", file);
     g_object_set_data (child, "icon", icon);

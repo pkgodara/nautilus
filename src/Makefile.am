@@ -150,6 +150,8 @@ nautilus_no_main_sources = \
 	nautilus-canvas-view.h			\
 	nautilus-canvas-view-container.c	\
 	nautilus-canvas-view-container.h	\
+	nautilus-container-max-width.c		\
+	nautilus-container-max-width.h		\
 	nautilus-dbus-manager.c 		\
 	nautilus-dbus-manager.h 		\
 	nautilus-desktop-item-properties.c	\
@@ -168,8 +170,6 @@ nautilus_no_main_sources = \
 	nautilus-freedesktop-dbus.h		\
 	nautilus-icon-view.c			\
 	nautilus-icon-view.h			\
-	nautilus-icon-view-item.c		\
-	nautilus-icon-view-item.h		\
 	nautilus-image-properties-page.c	\
 	nautilus-image-properties-page.h	\
 	nautilus-list-model.c			\

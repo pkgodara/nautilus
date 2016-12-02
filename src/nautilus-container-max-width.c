@@ -1,17 +1,16 @@
-#include "nautilus-icon-view-item.h"
+#include "nautilus-container-max-width.h"
 
-struct _NautilusIconViewItem
+struct _NautilusContainerMaxWidth
 {
     GtkBin parent_instance;
     guint max_width;
 };
 
-G_DEFINE_TYPE (NautilusIconViewItem, nautilus_icon_view_item, GTK_TYPE_BIN)
+G_DEFINE_TYPE (NautilusContainerMaxWidth, nautilus_container_max_width, GTK_TYPE_BIN)
 
 enum
 {
     PROP_0,
-    PROP_FILE,
     PROP_MAX_WIDTH,
     N_PROPS
 };
@@ -19,7 +18,7 @@ enum
 static GParamSpec *properties [N_PROPS];
 
 void
-nautilus_icon_view_item_set_max_width (NautilusIconViewItem *self,
+nautilus_container_max_width_set_max_width (NautilusContainerMaxWidth *self,
                                        guint                 max_width)
 {
     self->max_width = max_width;
@@ -27,32 +26,32 @@ nautilus_icon_view_item_set_max_width (NautilusIconViewItem *self,
 }
 
 guint
-nautilus_icon_view_item_get_max_width (NautilusIconViewItem *self)
+nautilus_container_max_width_get_max_width (NautilusContainerMaxWidth *self)
 {
     return self->max_width;
 }
 
-NautilusIconViewItem *
-nautilus_icon_view_item_new (void)
+NautilusContainerMaxWidth *
+nautilus_container_max_width_new (void)
 {
-    return g_object_new (NAUTILUS_TYPE_ICON_VIEW_ITEM, NULL);
+    return g_object_new (NAUTILUS_TYPE_CONTAINER_MAX_WIDTH, NULL);
 }
 
 static void
-nautilus_icon_view_item_finalize (GObject *object)
+nautilus_container_max_width_finalize (GObject *object)
 {
-    NautilusIconViewItem *self = (NautilusIconViewItem *) object;
+    NautilusContainerMaxWidth *self = (NautilusContainerMaxWidth *) object;
 
-    G_OBJECT_CLASS (nautilus_icon_view_item_parent_class)->finalize (object);
+    G_OBJECT_CLASS (nautilus_container_max_width_parent_class)->finalize (object);
 }
 
 static void
-nautilus_icon_view_item_get_property (GObject    *object,
+nautilus_container_max_width_get_property (GObject    *object,
                                       guint       prop_id,
                                       GValue     *value,
                                       GParamSpec *pspec)
 {
-    NautilusIconViewItem *self = NAUTILUS_ICON_VIEW_ITEM (object);
+    NautilusContainerMaxWidth *self = NAUTILUS_CONTAINER_MAX_WIDTH (object);
 
     switch (prop_id)
     {
@@ -70,18 +69,18 @@ nautilus_icon_view_item_get_property (GObject    *object,
 }
 
 static void
-nautilus_icon_view_item_set_property (GObject      *object,
+nautilus_container_max_width_set_property (GObject      *object,
                                       guint         prop_id,
                                       const GValue *value,
                                       GParamSpec   *pspec)
 {
-    NautilusIconViewItem *self = NAUTILUS_ICON_VIEW_ITEM (object);
+    NautilusContainerMaxWidth *self = NAUTILUS_CONTAINER_MAX_WIDTH (object);
 
     switch (prop_id)
     {
         case PROP_MAX_WIDTH:
         {
-            nautilus_icon_view_item_set_max_width (self, g_value_get_int (value));
+            nautilus_container_max_width_set_max_width (self, g_value_get_int (value));
         }
         break;
 
@@ -99,11 +98,11 @@ get_preferred_width (GtkWidget *widget,
                      gint      *natural_size)
 {
     GtkWidget *child;
-    NautilusIconViewItem *self;
+    NautilusContainerMaxWidth *self;
     GtkStyleContext *style_context;
     GtkBorder padding;
 
-    self = NAUTILUS_ICON_VIEW_ITEM (widget);
+    self = NAUTILUS_CONTAINER_MAX_WIDTH (widget);
     child = gtk_bin_get_child (GTK_BIN (self));
 
     *natural_size = 0;
@@ -128,13 +127,13 @@ get_preferred_height (GtkWidget *widget,
                       gint      *natural_size)
 {
     GtkWidget *child;
-    NautilusIconViewItem *self;
+    NautilusContainerMaxWidth *self;
     gint minimum_width = 0;
     gint natural_width = 0;
     GtkStyleContext *style_context;
     GtkBorder padding;
 
-    self = NAUTILUS_ICON_VIEW_ITEM (widget);
+    self = NAUTILUS_CONTAINER_MAX_WIDTH (widget);
     child = gtk_bin_get_child (GTK_BIN (self));
 
     get_preferred_width (widget, &minimum_width, &natural_width);
@@ -165,7 +164,7 @@ static void
 size_allocate (GtkWidget     *widget,
                GtkAllocation *allocation)
 {
-    GTK_WIDGET_CLASS (nautilus_icon_view_item_parent_class)->size_allocate (widget, allocation);
+    GTK_WIDGET_CLASS (nautilus_container_max_width_parent_class)->size_allocate (widget, allocation);
 }
 
 static void
@@ -175,15 +174,14 @@ get_preferred_width_for_height (GtkWidget *widget,
                                 gint      *natural_size)
 {
     get_preferred_width (widget, minimum_size, natural_size);
-    g_print ("get preffered width for height %d\n", *natural_size);
 }
 
 static void
 constructed (GObject *obj)
 {
-    NautilusIconViewItem *self = NAUTILUS_ICON_VIEW_ITEM (obj);
+    NautilusContainerMaxWidth *self = NAUTILUS_CONTAINER_MAX_WIDTH (obj);
 
-    G_OBJECT_CLASS (nautilus_icon_view_item_parent_class)->constructed (obj);
+    G_OBJECT_CLASS (nautilus_container_max_width_parent_class)->constructed (obj);
 
     /* We want our parent to gives our preferred width */
     gtk_widget_set_halign (GTK_WIDGET (self), GTK_ALIGN_CENTER);
@@ -191,14 +189,14 @@ constructed (GObject *obj)
 }
 
 static void
-nautilus_icon_view_item_class_init (NautilusIconViewItemClass *klass)
+nautilus_container_max_width_class_init (NautilusContainerMaxWidthClass *klass)
 {
     GObjectClass *object_class = G_OBJECT_CLASS (klass);
     GtkWidgetClass *widget_class = GTK_WIDGET_CLASS (klass);
 
-    object_class->finalize = nautilus_icon_view_item_finalize;
-    object_class->get_property = nautilus_icon_view_item_get_property;
-    object_class->set_property = nautilus_icon_view_item_set_property;
+    object_class->finalize = nautilus_container_max_width_finalize;
+    object_class->get_property = nautilus_container_max_width_get_property;
+    object_class->set_property = nautilus_container_max_width_set_property;
     object_class->constructed = constructed;
 
     widget_class->get_preferred_width = get_preferred_width;
@@ -209,6 +207,6 @@ nautilus_icon_view_item_class_init (NautilusIconViewItemClass *klass)
 }
 
 static void
-nautilus_icon_view_item_init (NautilusIconViewItem *self)
+nautilus_container_max_width_init (NautilusContainerMaxWidth *self)
 {
 }
