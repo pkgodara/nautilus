@@ -200,75 +200,6 @@ get_icon_size_for_zoom_level (NautilusCanvasZoomLevel zoom_level)
     g_return_val_if_reached (NAUTILUS_CANVAS_ICON_SIZE_STANDARD);
 }
 
-static GtkWidget *
-create_icon (NautilusIconView *self,
-             NautilusFile     *file)
-{
-    NautilusIconViewPrivate *priv = nautilus_icon_view_get_instance_private (self);
-    NautilusFileIconFlags flags;
-    g_autoptr (GdkPixbuf) icon_pixbuf;
-    GtkImage *icon;
-    GtkWidget *fixed_height_box;
-
-    flags = NAUTILUS_FILE_ICON_FLAGS_USE_THUMBNAILS |
-            NAUTILUS_FILE_ICON_FLAGS_FORCE_THUMBNAIL_SIZE |
-            NAUTILUS_FILE_ICON_FLAGS_USE_EMBLEMS |
-            NAUTILUS_FILE_ICON_FLAGS_USE_ONE_EMBLEM;
-
-    icon_pixbuf = nautilus_file_get_icon_pixbuf (file, get_icon_size_for_zoom_level (priv->zoom_level),
-                                                 TRUE, 1, flags);
-    icon = gtk_image_new_from_pixbuf (icon_pixbuf);
-    gtk_widget_set_hexpand (icon, TRUE);
-    gtk_widget_set_vexpand (icon, TRUE);
-    gtk_widget_set_valign (icon, GTK_ALIGN_CENTER);
-    gtk_widget_set_halign (icon, GTK_ALIGN_CENTER);
-
-    fixed_height_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-    gtk_widget_set_valign (fixed_height_box, GTK_ALIGN_CENTER);
-    gtk_widget_set_halign (fixed_height_box, GTK_ALIGN_CENTER);
-    gtk_widget_set_size_request (fixed_height_box, get_icon_size_for_zoom_level (priv->zoom_level),
-                                 get_icon_size_for_zoom_level (priv->zoom_level));
-
-
-    GtkStyleContext *style_contet = gtk_widget_get_style_context (fixed_height_box);
-    /*.icon-background {background-color:#fbfbfb; box-shadow: 0px 0px 4px #DDD; margin-bottom:4px} */
-    gtk_style_context_add_class (style_contet, "icon-background");
-
-    gtk_box_pack_start (fixed_height_box, icon, FALSE, FALSE, 0);
-
-    gtk_widget_show_all (fixed_height_box);
-
-    return fixed_height_box;
-}
-
-static void
-replace_icon (NautilusIconView *self,
-              GtkWidget        *flow_box_item)
-{
-    NautilusIconViewPrivate *priv = nautilus_icon_view_get_instance_private (self);
-    GtkWidget *new_icon;
-    GtkWidget *old_icon;
-    GtkWidget *box;
-    GtkWidget *label;
-    GtkWidget *icon_item;
-    NautilusFile *file;
-    gint label_nat_size;
-    gint icon_nat_size;
-
-    file = g_object_get_data (flow_box_item, "file");
-    old_icon = g_object_get_data (flow_box_item, "icon");
-    label = g_object_get_data (flow_box_item, "label");
-
-    icon_item = gtk_bin_get_child (GTK_BIN (flow_box_item));
-    nautilus_container_max_width_set_max_width (NAUTILUS_CONTAINER_MAX_WIDTH (icon_item),
-                                                get_icon_size_for_zoom_level (priv->zoom_level));
-    box = gtk_bin_get_child (GTK_BIN (icon_item));
-    gtk_container_remove (GTK_CONTAINER (box), old_icon);
-    new_icon = create_icon (self, file);
-    gtk_box_pack_start (box, new_icon, FALSE, FALSE, 0);
-    g_object_set_data (flow_box_item, "icon", new_icon);
-}
-
 static void
 set_icon_size (NautilusIconView *self,
                gint              icon_size)
@@ -277,14 +208,14 @@ set_icon_size (NautilusIconView *self,
     g_autoptr (GList) items;
     GList *l;
     g_autoptr (GList) box_children;
-    GtkWidget *flow_box_item;
+    NautilusIconViewItem *item;
 
     items = gtk_container_get_children (priv->flow_box);
 
     for (l = items; l; l = l->next)
     {
-        flow_box_item = GTK_WIDGET (l->data);
-        replace_icon (self, flow_box_item);
+        item = GTK_WIDGET (l->data);
+        nautilus_icon_view_item_set_icon_size (self, get_icon_size_for_zoom_level (priv->zoom_level));
     }
 }
 
