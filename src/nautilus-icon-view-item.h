@@ -12,13 +12,16 @@ G_BEGIN_DECLS
 
 G_DECLARE_FINAL_TYPE (NautilusIconViewItem, nautilus_icon_view_item, NAUTILUS, ICON_VIEW_ITEM, GtkFlowBoxChild)
 
-NautilusIconViewItem *nautilus_icon_view_item_new (void);
+NautilusIconViewItem * nautilus_icon_view_item_new (NautilusFile *file,
+                                                    guint         icon_size);
 
 void nautilus_icon_view_item_set_icon_size (NautilusIconViewItem *item,
                                             guint                 icon_size);
 
 void nautilus_icon_view_item_set_file (NautilusIconViewItem *item,
                                        NautilusFile         *file);
+
+NautilusFile * nautilus_icon_view_item_get_file (NautilusIconViewItem *item);
 
 G_END_DECLS
 

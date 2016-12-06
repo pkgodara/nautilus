@@ -17,16 +17,14 @@
  */
 
 #include <config.h>
+#include <glib.h>
 
 #include "nautilus-icon-view.h"
+#include "nautilus-icon-view-item.h"
 #include "nautilus-files-view.h"
 #include "nautilus-file.h"
 #include "nautilus-directory.h"
 #include "nautilus-global-preferences.h"
-
-#include "nautilus-container-max-width.h"
-
-#include <glib.h>
 
 typedef struct
 {
@@ -214,8 +212,8 @@ set_icon_size (NautilusIconView *self,
 
     for (l = items; l; l = l->next)
     {
-        item = GTK_WIDGET (l->data);
-        nautilus_icon_view_item_set_icon_size (self, get_icon_size_for_zoom_level (priv->zoom_level));
+        item = NAUTILUS_ICON_VIEW_ITEM (l->data);
+        nautilus_icon_view_item_set_icon_size (item, get_icon_size_for_zoom_level (priv->zoom_level));
     }
 }
 
@@ -402,51 +400,14 @@ create_widget_func (gpointer item,
     NautilusIconView *self = NAUTILUS_ICON_VIEW (user_data);
     NautilusFile *file = NAUTILUS_FILE (item);
     NautilusIconViewPrivate *priv = nautilus_icon_view_get_instance_private (self);
-    GtkFlowBoxChild *child;
-    GtkBox *container;
-    NautilusContainerMaxWidth *item_container;
-    gint label_nat_size;
-    gint icon_nat_size;
-    GtkLabel *label;
-    GtkWidget *icon;
-    GtkStyleContext *style_context;
+    NautilusIconViewItem *child;
 
-    container = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
-    item_container = nautilus_container_max_width_new ();
-
-    icon = create_icon (self, file);
-    gtk_box_pack_start (container, icon, FALSE, FALSE, 0);
-
-    label = gtk_label_new (nautilus_file_get_display_name (file));
-    gtk_label_set_ellipsize (label, PANGO_ELLIPSIZE_END);
-    gtk_label_set_line_wrap (label, TRUE);
-    gtk_label_set_line_wrap_mode (label, PANGO_WRAP_WORD_CHAR);
-    gtk_label_set_lines (label, 4);
-    gtk_label_set_justify (label, GTK_JUSTIFY_CENTER);
-    gtk_widget_set_valign (GTK_WIDGET (label), GTK_ALIGN_START);
-    gtk_box_pack_end (container, label, TRUE, TRUE, 0);
-
-    style_context = gtk_widget_get_style_context (container);
-    gtk_style_context_add_class (style_context, "icon-item-background");
-
-    gtk_widget_show_all (container);
-    gtk_widget_set_valign (container, GTK_ALIGN_START);
-    gtk_widget_set_halign (container, GTK_ALIGN_CENTER);
-
-    gtk_container_add (item_container, container);
-    nautilus_container_max_width_set_max_width (NAUTILUS_CONTAINER_MAX_WIDTH (item_container),
-                                                get_icon_size_for_zoom_level (priv->zoom_level));
-
-    child = gtk_flow_box_child_new ();
-    gtk_container_add (child, item_container);
-
-    g_object_set_data (child, "file", file);
-    g_object_set_data (child, "icon", icon);
-    g_object_set_data (child, "label", label);
-
+    g_print ("is it a file? %s\n", nautilus_file_get_uri (file));
+    child = nautilus_icon_view_item_new (file,
+                                         get_icon_size_for_zoom_level (priv->zoom_level));
     gtk_widget_show_all (child);
 
-    return child;
+    return GTK_WIDGET (child);
 }
 
 static void
@@ -459,7 +420,7 @@ on_child_activated (GtkFlowBox      *flow_box,
     NautilusFile *file;
     g_autoptr (GList) list = NULL;
 
-    file = g_object_get_data (G_OBJECT (child), "file");
+    file = nautilus_icon_view_item_get_file (child);
     list = g_list_append (list, file);
 
     nautilus_files_view_activate_files (NAUTILUS_FILES_VIEW (self), list, 0, TRUE);

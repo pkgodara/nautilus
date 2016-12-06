@@ -1,10 +1,16 @@
 #include "nautilus-icon-view-item.h"
+#include "nautilus-container-max-width.h"
+#include "nautilus-file.h"
+#include "nautilus-thumbnails.h"
 
 struct _NautilusIconViewItem
 {
     GtkFlowBoxChild parent_instance;
-    GtkWidget *item_container;
+    NautilusContainerMaxWidth *item_container;
+    GtkBox *icon;
     guint icon_size;
+    NautilusFile *file;
+    GtkLabel *label;
 };
 
 G_DEFINE_TYPE (NautilusIconViewItem, nautilus_icon_view_item, GTK_TYPE_FLOW_BOX_CHILD)
@@ -16,14 +22,6 @@ enum
     PROP_ICON_SIZE,
     N_PROPS
 };
-
-static GParamSpec *properties [N_PROPS];
-
-NautilusIconViewItem *
-nautilus_icon_view_item_new (void)
-{
-    return g_object_new (NAUTILUS_TYPE_ICON_VIEW_ITEM, NULL);
-}
 
 static void
 nautilus_icon_view_item_finalize (GObject *object)
@@ -91,33 +89,6 @@ nautilus_icon_view_item_set_property (GObject      *object,
     }
 }
 
-static void
-nautilus_icon_view_item_class_init (NautilusIconViewItemClass *klass)
-{
-    GObjectClass *object_class = G_OBJECT_CLASS (klass);
-
-    object_class->finalize = nautilus_icon_view_item_finalize;
-    object_class->get_property = nautilus_icon_view_item_get_property;
-    object_class->set_property = nautilus_icon_view_item_set_property;
-
-    g_object_class_install_property (object_class,
-                                     PROP_ICON_SIZE,
-                                     g_param_spec_int ("icon-size",
-                                                       "Icon size",
-                                                       "The size in pixels of the icon",
-                                                       NAUTILUS_CANVAS_ICON_SIZE_SMALL,
-                                                       NAUTILUS_CANVAS_ICON_SIZE_LARGER,
-                                                       NAUTILUS_CANVAS_ICON_SIZE_LARGE,
-                                                       G_PARAM_READWRITE));
-    g_object_class_install_property (object_class,
-                                     PROP_FILE,
-                                     g_param_spec_object ("icon-size",
-                                                          "Icon size",
-                                                          "The size in pixels of the icon",
-                                                          NAUTILUS_TYPE_FILE,
-                                                          G_PARAM_READWRITE));
-}
-
 static GtkWidget *
 create_icon (NautilusIconViewItem *self)
 {
@@ -132,7 +103,7 @@ create_icon (NautilusIconViewItem *self)
             NAUTILUS_FILE_ICON_FLAGS_USE_EMBLEMS |
             NAUTILUS_FILE_ICON_FLAGS_USE_ONE_EMBLEM;
 
-    icon_pixbuf = nautilus_file_get_icon_pixbuf (self->file, priv->icon_size,
+    icon_pixbuf = nautilus_file_get_icon_pixbuf (self->file, self->icon_size,
                                                  TRUE, 1, flags);
     icon = gtk_image_new_from_pixbuf (icon_pixbuf);
     gtk_widget_set_hexpand (icon, TRUE);
@@ -143,12 +114,14 @@ create_icon (NautilusIconViewItem *self)
     fixed_height_box = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     gtk_widget_set_valign (fixed_height_box, GTK_ALIGN_CENTER);
     gtk_widget_set_halign (fixed_height_box, GTK_ALIGN_CENTER);
-    gtk_widget_set_size_request (fixed_height_box, get_icon_size_for_zoom_level (priv->zoom_level),
-                                 get_icon_size_for_zoom_level (priv->zoom_level));
+    gtk_widget_set_size_request (fixed_height_box, self->icon_size, self->icon_size);
 
-
-    style_context = gtk_widget_get_style_context (fixed_height_box);
-    gtk_style_context_add_class (style_contet, "icon-background");
+    if (nautilus_can_thumbnail (self->file) &&
+        nautilus_file_should_show_thumbnail (self->file))
+    {
+        style_context = gtk_widget_get_style_context (fixed_height_box);
+        gtk_style_context_add_class (style_context, "icon-background");
+    }
 
     gtk_box_pack_start (fixed_height_box, icon, FALSE, FALSE, 0);
 
@@ -160,36 +133,24 @@ create_icon (NautilusIconViewItem *self)
 static void
 update_icon (NautilusIconViewItem *self)
 {
-    GtkWidget *new_icon;
-    GtkWidget *old_icon;
     GtkWidget *box;
-    GtkWidget *label;
-    NautilusFile *file;
-    gint label_nat_size;
-    gint icon_nat_size;
-
-    file = g_object_get_data (flow_box_item, "file");
-    old_icon = g_object_get_data (flow_box_item, "icon");
-    label = g_object_get_data (flow_box_item, "label");
 
     nautilus_container_max_width_set_max_width (NAUTILUS_CONTAINER_MAX_WIDTH (self->item_container),
-                                                get_icon_size_for_zoom_level (priv->zoom_level));
+                                                self->icon_size);
     box = gtk_bin_get_child (GTK_BIN (self->item_container));
-    gtk_container_remove (GTK_CONTAINER (box), old_icon);
-    new_icon = create_icon (self);
-    gtk_box_pack_start (box, new_icon, FALSE, FALSE, 0);
-    g_object_set_data (flow_box_item, "icon", new_icon);
+    if (self->icon)
+    {
+        gtk_container_remove (GTK_CONTAINER (box), self->icon);
+    }
+    self->icon = create_icon (self);
+    gtk_box_pack_start (box, self->icon, FALSE, FALSE, 0);
 }
 
 static void
-nautilus_icon_view_item_init (NautilusIconViewItem *self)
+constructed (NautilusIconViewItem *self)
 {
-    NautilusFile *file = NAUTILUS_FILE (item);
-    GtkFlowBoxChild *child;
     GtkBox *container;
     NautilusContainerMaxWidth *item_container;
-    gint label_nat_size;
-    gint icon_nat_size;
     GtkLabel *label;
     GtkWidget *icon;
     GtkStyleContext *style_context;
@@ -197,10 +158,11 @@ nautilus_icon_view_item_init (NautilusIconViewItem *self)
     container = gtk_box_new (GTK_ORIENTATION_VERTICAL, 0);
     self->item_container = nautilus_container_max_width_new ();
 
-    icon = create_icon (self);
-    gtk_box_pack_start (container, icon, FALSE, FALSE, 0);
+    g_print ("file %s\n", nautilus_file_get_uri (self->file));
+    self->icon = create_icon (self);
+    gtk_box_pack_start (container, self->icon, FALSE, FALSE, 0);
 
-    label = gtk_label_new (nautilus_file_get_display_name (file));
+    label = gtk_label_new (nautilus_file_get_display_name (self->file));
     gtk_label_set_ellipsize (label, PANGO_ELLIPSIZE_END);
     gtk_label_set_line_wrap (label, TRUE);
     gtk_label_set_line_wrap_mode (label, PANGO_WRAP_WORD_CHAR);
@@ -218,16 +180,54 @@ nautilus_icon_view_item_init (NautilusIconViewItem *self)
 
     gtk_container_add (self->item_container, container);
     nautilus_container_max_width_set_max_width (NAUTILUS_CONTAINER_MAX_WIDTH (self->item_container),
-                                                get_icon_size_for_zoom_level (priv->zoom_level));
+                                                self->icon_size);
 
-    child = gtk_flow_box_child_new ();
-    gtk_container_add (child, self->item_container);
+    gtk_container_add (GTK_CONTAINER (self), self->item_container);
+    gtk_widget_show_all (self);
+}
 
-    g_object_set_data (child, "file", file);
-    g_object_set_data (child, "icon", icon);
-    g_object_set_data (child, "label", label);
+static void
+nautilus_icon_view_item_init (NautilusIconViewItem *self)
+{
+}
 
-    gtk_widget_show_all (child);
+
+static void
+nautilus_icon_view_item_class_init (NautilusIconViewItemClass *klass)
+{
+    GObjectClass *object_class = G_OBJECT_CLASS (klass);
+
+    object_class->finalize = nautilus_icon_view_item_finalize;
+    object_class->get_property = nautilus_icon_view_item_get_property;
+    object_class->set_property = nautilus_icon_view_item_set_property;
+    object_class->constructed = constructed;
+
+    g_object_class_install_property (object_class,
+                                     PROP_ICON_SIZE,
+                                     g_param_spec_int ("icon-size",
+                                                       "Icon size",
+                                                       "The size in pixels of the icon",
+                                                       NAUTILUS_CANVAS_ICON_SIZE_SMALL,
+                                                       NAUTILUS_CANVAS_ICON_SIZE_LARGER,
+                                                       NAUTILUS_CANVAS_ICON_SIZE_LARGE,
+                                                       G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+    g_object_class_install_property (object_class,
+                                     PROP_FILE,
+                                     g_param_spec_object ("file",
+                                                          "File",
+                                                          "The file the icon item represents",
+                                                          NAUTILUS_TYPE_FILE,
+                                                          G_PARAM_READWRITE | G_PARAM_CONSTRUCT));
+}
+
+NautilusIconViewItem *
+nautilus_icon_view_item_new (NautilusFile *file,
+                             guint         icon_size)
+{
+    return g_object_new (NAUTILUS_TYPE_ICON_VIEW_ITEM,
+                         "file", file,
+                         "icon-size", icon_size,
+                         NULL);
 }
 
 void
@@ -236,8 +236,20 @@ nautilus_icon_view_item_set_icon_size (NautilusIconViewItem *self,
 {
   g_return_if_fail (NAUTILUS_IS_ICON_VIEW_ITEM (self));
 
-  priv->icon_size = icon_size;
-  update_icon (self);
+  self->icon_size = icon_size;
+
+  if (self->icon)
+  {
+    update_icon (self);
+  }
+}
+
+NautilusFile *
+nautilus_icon_view_item_get_file (NautilusIconViewItem *self)
+{
+    g_return_if_fail (NAUTILUS_IS_ICON_VIEW_ITEM (self));
+
+    return self->file;
 }
 
 void
@@ -245,7 +257,18 @@ nautilus_icon_view_item_set_file (NautilusIconViewItem *self,
                                   NautilusFile         *file)
 {
   g_return_if_fail (NAUTILUS_IS_ICON_VIEW_ITEM (self));
-
-  g_clear_object (self->file);
+  g_print ("file HERE!!!!!");
+  g_clear_object (&self->file);
   self->file = g_object_ref (file);
+
+  if (self->icon)
+  {
+    update_icon (self);
+  }
+
+  if (self->label)
+  {
+      gtk_label_set_text (self->label,
+                          nautilus_file_get_display_name (file));
+  }
 }
